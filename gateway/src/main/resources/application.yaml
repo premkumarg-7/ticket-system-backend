@@ -20,6 +20,14 @@ spring:
               filters:
                 - StripPrefix=0
 
+            - id: admin-service
+              uri: http://localhost:8081
+              predicates:
+                - Path=/admin/**
+              filters:
+                - StripPrefix=0
+                - JwtAuthFilter
+
             - id: ticket-service
               uri: http://localhost:8088
               predicates:
@@ -29,4 +37,4 @@ spring:
                 - JwtAuthFilter
 
 jwt:
-  secret: e2d-helpdesk-service-2026-supersecret-key
+  secret: ${JWT_SECRET:e2d-helpdesk-service-2026-supersecret-key}

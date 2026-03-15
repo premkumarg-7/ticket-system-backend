@@ -48,7 +48,7 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
             List<String> roles = jwtUtil.extractRoles(token);
 
             ServerHttpRequest modifiedRequest = request.mutate()
-                    .header("X-User", username)
+                    .header("X-User-Name", username)
                     .header("X-Roles", String.join(",", roles))
                     .build();
 
@@ -63,6 +63,5 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
     }
 
     public static class Config {
-        // Put configuration properties here
     }
 }

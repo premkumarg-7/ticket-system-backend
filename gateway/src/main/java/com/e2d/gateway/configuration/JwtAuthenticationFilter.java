@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -26,28 +25,31 @@ public class JwtAuthenticationFilter implements GatewayFilter {
         if (request.getURI().getPath().startsWith("/auth")) {
             return chain.filter(exchange);
         }
+
         String authHeader = request.getHeaders().getFirst("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer "))
-            return onError(exchange, "Missing Authorization header");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return onError(exchange, "Missing Authorization header", HttpStatus.UNAUTHORIZED);
+        }
 
         String token = authHeader.substring(7);
 
-        if (jwtUtil.isTokenValid(token))
-            return onError(exchange, "Invalid token");
+        if (!jwtUtil.isTokenValid(token)) {
+            return onError(exchange, "Invalid or expired token", HttpStatus.UNAUTHORIZED);
+        }
 
         String username = jwtUtil.extractUserId(token);
         List<String> roles = jwtUtil.extractRoles(token);
 
         ServerHttpRequest modifiedRequest = request.mutate()
-                .header("X-User", username)
+                .header("X-User-Name", username)
                 .header("X-Roles", String.join(",", roles))
                 .build();
 
         return chain.filter(exchange.mutate().request(modifiedRequest).build());
     }
 
-    private Mono<Void> onError(ServerWebExchange exchange, String message) {
-        exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+    private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {
+        exchange.getResponse().setStatusCode(status);
         return exchange.getResponse().setComplete();
     }
 }
