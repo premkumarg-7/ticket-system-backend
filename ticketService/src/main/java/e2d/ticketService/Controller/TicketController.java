@@ -56,6 +56,18 @@ public class TicketController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT')")
+    @PatchMapping("/{id}")
+    public ResponseEntity<Ticket> assignTicket(@PathVariable UUID id, @RequestBody TicketDTO ticketDTO) {
+        try {
+            String assigned_to = ticketDTO.getAssignedTo();
+            return ResponseEntity.ok(ticketService.updateAssignedTo(id, assigned_to));
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTicket(@PathVariable UUID id) {
