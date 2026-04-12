@@ -1,0 +1,34 @@
+server:
+  port: ${SERVER_PORT:8088}
+
+spring:
+  application:
+    name: ticketService
+
+  datasource:
+    url: jdbc:mariadb://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:e2d_ticket_server}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:1234}
+    driver-class-name: org.mariadb.jdbc.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        type:
+          uuid:
+            char: true
+        format_sql: true
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.support.serializer.JsonSerializer
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG

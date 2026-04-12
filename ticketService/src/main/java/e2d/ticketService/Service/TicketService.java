@@ -1,13 +1,18 @@
 package e2d.ticketService.Service;
 
 import e2d.ticketService.DTO.TicketDTO;
+import e2d.ticketService.DTO.TicketEvent;
+import e2d.ticketService.Entity.Enum.TicketEventType;
 import e2d.ticketService.Entity.Enum.TicketStatus;
 import e2d.ticketService.Entity.Ticket;
 import e2d.ticketService.Mapper.TicketMapper;
 import e2d.ticketService.Repository.TicketRepository;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,18 +21,31 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class TicketService {
 
     private final TicketRepository ticketRepository;
     private final TicketMapper ticketMapper;
 
+    @Autowired
+    private KafkaTemplate<String, TicketEvent> kafkaTemplate;
+
     @Transactional
     public Ticket createTicket(TicketDTO ticketDTO) {
         Ticket ticket = ticketMapper.toEntity(ticketDTO);
-        // Ensure status is set if missing, default to OPEN? Or let DB handle it?
-        // Let's assume input might have it, if not, we can default in Entity or here.
-        // For now, trusting mapper.
+
+
+        TicketEvent event = new TicketEvent(
+                ticket.getId(),
+                ticket.getTitle(),
+                ticket.createdBy,
+                ticket.getAssignedTo(),
+                TicketEventType.TICKET_CREATED
+        );
+
+        kafkaTemplate.send("e2d-notification", event);
+        log.info("Ticket Created : {}", ticket);
         return ticketRepository.save(ticket);
     }
 
@@ -51,6 +69,37 @@ public class TicketService {
         ticketMapper.updateEntityFromDto(ticketDTO, ticket);
 
         return ticketRepository.save(ticket);
+    }
+
+    @Transactional
+    public Ticket updateAssignedTo(UUID id, String assignedTo) {
+
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
+
+        String oldAssignee = ticket.getAssignedTo();
+
+        if (oldAssignee != null && oldAssignee.equals(assignedTo)) {
+            log.info("No change in assignee for ticket {}", id);
+            return ticket;
+        }
+
+        ticket.setAssignedTo(assignedTo);
+        Ticket updatedTicket = ticketRepository.save(ticket);
+
+        TicketEvent event = new TicketEvent(
+                ticket.getId(),
+                ticket.getTitle(),
+                ticket.createdBy,
+                ticket.getAssignedTo(),
+                TicketEventType.TICKET_ASSIGNED
+        );
+
+        if (assignedTo != null) {
+            kafkaTemplate.send("e2d-notification", event);
+            log.info("Assignment event sent for ticket {} → {}", id, assignedTo);
+        }
+        return updatedTicket;
     }
 
     @Transactional

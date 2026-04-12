@@ -2,6 +2,7 @@ package e2d.ticketService.DTO;
 
 import e2d.ticketService.Entity.Enum.TicketPriority;
 import e2d.ticketService.Entity.Enum.TicketStatus;
+import jakarta.validation.constraints.Email;
 import lombok.*;
 
 import java.util.List;
