@@ -6,8 +6,11 @@ import e2d.ticketService.Entity.Ticket;
 import e2d.ticketService.Mapper.TicketMapper;
 import e2d.ticketService.Repository.TicketRepository;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,11 +19,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class TicketService {
 
     private final TicketRepository ticketRepository;
     private final TicketMapper ticketMapper;
+
+    @Autowired
+    private KafkaTemplate<String, Ticket> kafkaTemplate;
 
     @Transactional
     public Ticket createTicket(TicketDTO ticketDTO) {
@@ -28,6 +35,8 @@ public class TicketService {
         // Ensure status is set if missing, default to OPEN? Or let DB handle it?
         // Let's assume input might have it, if not, we can default in Entity or here.
         // For now, trusting mapper.
+        kafkaTemplate.send("e2d-notification", ticket);
+        log.info("Ticket Created : {}", ticket);
         return ticketRepository.save(ticket);
     }
 
