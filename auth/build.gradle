@@ -49,3 +49,8 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+bootJar {
+	archiveBaseName.set("e2d-auth-service")
+	archiveVersion.set("1.0.0")
+}
