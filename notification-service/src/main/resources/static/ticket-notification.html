@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket Notification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f8fb;
+            padding: 20px;
+        }
+        .container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            margin: auto;
+            border: 1px solid #e0e0e0;
+        }
+        .header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .created { color: #2e7d32; }   /* green */
+        .assigned { color: #1565c0; }  /* blue */
+
+        .content {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+        .ticket-box {
+            background: #f1f5ff;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+        .btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 14px;
+            background: #1565c0;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <!-- Dynamic Header -->
+    <div class="header"
+         th:classappend="${type} == 'CREATED' ? 'created' : 'assigned'">
+
+        <span th:if="${type} == 'CREATED'">🎫 Ticket Created</span>
+        <span th:if="${type} == 'ASSIGNED'">📌 Ticket Assigned</span>
+    </div>
+
+    <div class="content">
+
+        <p th:if="${type} == 'CREATED'">
+            Hello, your ticket has been successfully created.
+        </p>
+
+        <p th:if="${type} == 'ASSIGNED'">
+            Hello, a ticket has been assigned to you.
+        </p>
+
+        <!-- Ticket Details -->
+        <div class="ticket-box">
+            <strong>Ticket ID:</strong>
+            <span th:text="${ticketId}"></span><br>
+
+            <strong>Title:</strong>
+            <span th:text="${ticketTitle}"></span><br>
+
+            <span th:if="${assignedTo != null}">
+                <strong>Assigned To:</strong>
+                <span th:text="${assignedTo}"></span>
+            </span>
+        </div>
+
+<!--        &lt;!&ndash; Optional button &ndash;&gt;-->
+<!--        <a th:href="'http://yourapp/tickets/' + ${ticketId}" class="btn">-->
+<!--            View Ticket-->
+<!--        </a>-->
+
+    </div>
+
+    <div class="footer">
+        Regards,<br>
+        Helpdesk Team
+    </div>
+
+</div>
+</body>
+</html>

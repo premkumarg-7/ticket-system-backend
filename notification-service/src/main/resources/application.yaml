@@ -1,0 +1,29 @@
+server:
+  port: ${SERVER_PORT:9000}
+spring:
+  application:
+    name: notification-service
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    consumer:
+      group-id: notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+      properties:
+        spring.json.trusted.packages: "*"
+
+    listener:
+      missing-topics-fatal: false
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: 1eventxtest@gmail.com
+    password: ddgx twcr pdjy pkam
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
