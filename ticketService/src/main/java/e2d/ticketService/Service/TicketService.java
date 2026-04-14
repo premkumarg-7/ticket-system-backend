@@ -5,6 +5,7 @@ import e2d.ticketService.DTO.TicketEvent;
 import e2d.ticketService.Entity.Enum.TicketEventType;
 import e2d.ticketService.Entity.Enum.TicketStatus;
 import e2d.ticketService.Entity.Ticket;
+import e2d.ticketService.Exception.TicketNotFoundException;
 import e2d.ticketService.Mapper.TicketMapper;
 import e2d.ticketService.Repository.TicketRepository;
 import lombok.*;
@@ -39,7 +40,7 @@ public class TicketService {
         TicketEvent event = new TicketEvent(
                 ticket.getId(),
                 ticket.getTitle(),
-                ticket.createdBy,
+                ticket.getCreatedBy(),
                 ticket.getAssignedTo(),
                 TicketEventType.TICKET_CREATED
         );
@@ -64,7 +65,7 @@ public class TicketService {
     @Transactional
     public Ticket updateTicket(UUID id, TicketDTO ticketDTO) {
         Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
+                .orElseThrow(() -> new TicketNotFoundException(id));
 
         ticketMapper.updateEntityFromDto(ticketDTO, ticket);
 
@@ -75,7 +76,7 @@ public class TicketService {
     public Ticket updateAssignedTo(UUID id, String assignedTo) {
 
         Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
+                .orElseThrow(() -> new TicketNotFoundException(id));
 
         String oldAssignee = ticket.getAssignedTo();
 
@@ -90,7 +91,7 @@ public class TicketService {
         TicketEvent event = new TicketEvent(
                 ticket.getId(),
                 ticket.getTitle(),
-                ticket.createdBy,
+                ticket.getCreatedBy(),
                 ticket.getAssignedTo(),
                 TicketEventType.TICKET_ASSIGNED
         );
@@ -105,7 +106,7 @@ public class TicketService {
     @Transactional
     public void deleteTicket(UUID id) {
         if (!ticketRepository.existsById(id)) {
-            throw new RuntimeException("Ticket not found with id: " + id);
+            throw new TicketNotFoundException(id);
         }
         ticketRepository.deleteById(id);
     }

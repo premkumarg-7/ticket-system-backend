@@ -1,11 +1,12 @@
 server:
   port: ${SERVER_PORT:9000}
+
 spring:
   application:
     name: notification-service
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
     consumer:
       group-id: notification-group
@@ -25,7 +26,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: ${MAIL_USERNAME:1eventxtest@gmail.com}
-    password: ${MAIL_PASSWORD}
+    password: ${MAIL_PASSWORD:ddgx twcr pdjy pkam}
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true

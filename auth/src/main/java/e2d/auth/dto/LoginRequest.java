@@ -2,5 +2,11 @@ package e2d.auth.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
-public record LoginRequest(@NotBlank String username, @NotBlank String password) {
+public record LoginRequest(
+    @NotBlank(message = "Username is required")
+    String username,
+
+    @NotBlank(message = "Password is required")
+    String password
+) {
 }

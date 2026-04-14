@@ -7,10 +7,12 @@ import e2d.auth.dto.AdminRegisterRequest;
 import e2d.auth.dto.AuthResponse;
 import e2d.auth.dto.LoginRequest;
 import e2d.auth.dto.RegisterRequest;
+import e2d.auth.exception.InvalidCredentialsException;
+import e2d.auth.exception.RoleNotFoundException;
+import e2d.auth.exception.UserNotFoundException;
 import e2d.auth.repository.RoleRepository;
 import e2d.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +34,7 @@ public class AuthService {
         user.setUsername(registerRequest.username());
         user.setPassword(passwordEncoder.encode(registerRequest.password()));
         Role role = roleRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+                .orElseThrow(() -> new RoleNotFoundException("ROLE_USER"));
         user.setRoles(Set.of(role));
         userRepository.save(user);
 
@@ -44,7 +46,7 @@ public class AuthService {
     public AuthResponse adminRegister(AdminRegisterRequest request) {
         Set<Role> roles = request.roles().stream()
                 .map(roleName -> roleRepository.findByName(roleName)
-                        .orElseThrow(() -> new RuntimeException("Role not found: " + roleName)))
+                        .orElseThrow(() -> new RoleNotFoundException(roleName)))
                 .collect(Collectors.toSet());
         User user = new User();
         user.setUsername(request.username());
@@ -59,10 +61,10 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest loginRequest) {
         User user = userRepository.findByUsernameWithRoles(loginRequest.username())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(loginRequest.username()));
 
         if (!passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
-            throw new RuntimeException("Incorrect password");
+            throw new InvalidCredentialsException();
         }
         String accessToken = jwtService.generateToken(user);
         RefreshToken refreshToken = refreshTokenService.create(user);
@@ -71,7 +73,7 @@ public class AuthService {
 
     public void logout(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+                .orElseThrow(() -> new UserNotFoundException(username));
         refreshTokenService.revokeAll(user);
     }
 }
