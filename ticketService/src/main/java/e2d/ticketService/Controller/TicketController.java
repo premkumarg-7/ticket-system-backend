@@ -23,8 +23,10 @@ public class TicketController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'AGENT')")
     @PostMapping
-    public ResponseEntity<Ticket> createTicket(@RequestBody @Valid TicketDTO ticketDTO) {
-        return ResponseEntity.ok(ticketService.createTicket(ticketDTO));
+    public ResponseEntity<Ticket> createTicket(
+            @RequestBody @Valid TicketDTO ticketDTO,
+            @RequestHeader("X-User-Email") String userEmail) {
+        return ResponseEntity.ok(ticketService.createTicket(ticketDTO, userEmail));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'USER')")
@@ -55,9 +57,12 @@ public class TicketController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'AGENT')")
     @PatchMapping("/{id}")
-    public ResponseEntity<Ticket> assignTicket(@PathVariable UUID id, @RequestBody @Valid TicketDTO ticketDTO) {
+    public ResponseEntity<Ticket> assignTicket(
+            @PathVariable UUID id,
+            @RequestBody @Valid TicketDTO ticketDTO,
+            @RequestHeader("X-User-Email") String userEmail) {
         String assigned_to = ticketDTO.getAssignedTo();
-        return ResponseEntity.ok(ticketService.updateAssignedTo(id, assigned_to));
+        return ResponseEntity.ok(ticketService.updateAssignedTo(id, assigned_to, userEmail));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN')")

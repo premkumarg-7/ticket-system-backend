@@ -38,9 +38,22 @@ public class EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
             if (event.eventType() == TicketEventType.TICKET_CREATED) {
-                helper.setTo(event.userEmail());
+                if (event.userEmail() != null && !event.userEmail().isBlank()) {
+                    helper.setTo(event.userEmail());
+                } else {
+                    log.warn("No creator email for ticket {}, skipping notification", event.ticketId());
+                    return;
+                }
+            } else if (event.eventType() == TicketEventType.TICKET_ASSIGNED) {
+                if (event.assignedToEmail() != null && !event.assignedToEmail().isBlank()) {
+                    helper.setTo(event.assignedToEmail());
+                } else {
+                    log.warn("No assignee email for ticket {}, skipping notification", event.ticketId());
+                    return;
+                }
             } else {
-                helper.setTo(event.assignedTo());
+                log.warn("Unknown event type: {}", event.eventType());
+                return;
             }
 
             helper.setSubject(

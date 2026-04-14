@@ -29,6 +29,10 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
+app:
+  auth-service:
+    url: ${AUTH_SERVICE_URL:http://localhost:8081}
+
 logging:
   level:
     org.hibernate.SQL: ${SQL_LOG_LEVEL:DEBUG}

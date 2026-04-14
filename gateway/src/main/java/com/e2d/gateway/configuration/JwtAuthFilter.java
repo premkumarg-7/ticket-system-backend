@@ -45,10 +45,12 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
             }
 
             String username = jwtUtil.extractUserId(token);
+            String email = jwtUtil.extractEmail(token);
             List<String> roles = jwtUtil.extractRoles(token);
 
             ServerHttpRequest modifiedRequest = request.mutate()
                     .header("X-User-Name", username)
+                    .header("X-User-Email", email)
                     .header("X-Roles", String.join(",", roles))
                     .build();
 

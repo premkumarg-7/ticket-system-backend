@@ -32,6 +32,7 @@ public class AuthService {
     public AuthResponse register(RegisterRequest registerRequest) {
         User user = new User();
         user.setUsername(registerRequest.username());
+        user.setEmail(registerRequest.email());
         user.setPassword(passwordEncoder.encode(registerRequest.password()));
         Role role = roleRepository.findByName("ROLE_USER")
                 .orElseThrow(() -> new RoleNotFoundException("ROLE_USER"));
@@ -50,6 +51,7 @@ public class AuthService {
                 .collect(Collectors.toSet());
         User user = new User();
         user.setUsername(request.username());
+        user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setRoles(roles);
         userRepository.save(user);
