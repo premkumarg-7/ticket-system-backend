@@ -15,7 +15,7 @@ spring:
 
       properties:
         spring.json.value.default.type: com.e2d.notification_service.DTO.TicketEvent
-        spring.json.trusted.packages: "*"
+        spring.json.trusted.packages: "com.e2d.notification_service.DTO,e2d.ticketService.DTO"
         spring.json.use.type.headers: false
 
     listener:

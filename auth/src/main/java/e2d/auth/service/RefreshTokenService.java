@@ -2,6 +2,7 @@ package e2d.auth.service;
 
 import e2d.auth.domain.RefreshToken;
 import e2d.auth.domain.User;
+import e2d.auth.exception.InvalidRefreshTokenException;
 import e2d.auth.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,11 +27,15 @@ public class RefreshTokenService {
 
     @Transactional(readOnly = true)
     public RefreshToken verify(String token) {
-        RefreshToken refreshToken = refreshTokenRepository.findByTokenWithUser(token).orElseThrow(()-> new RuntimeException("Refresh token not found"));
-        if(refreshToken.isRevoked()) throw new RuntimeException("Refresh token is revoked");
+        RefreshToken refreshToken = refreshTokenRepository.findByTokenWithUser(token)
+                .orElseThrow(() -> new InvalidRefreshTokenException("not found"));
+
+        if (refreshToken.isRevoked()) {
+            throw new InvalidRefreshTokenException("revoked");
+        }
 
         if (refreshToken.getExpiryDate().isBefore(Instant.now())) {
-            throw new RuntimeException("Refresh token expired");
+            throw new InvalidRefreshTokenException("expired");
         }
 
         refreshToken.getUser().getUsername();
