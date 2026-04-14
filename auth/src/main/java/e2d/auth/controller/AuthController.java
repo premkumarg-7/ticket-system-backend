@@ -1,13 +1,9 @@
 package e2d.auth.controller;
 
 import e2d.auth.domain.RefreshToken;
-import e2d.auth.domain.User;
 import e2d.auth.dto.AuthResponse;
 import e2d.auth.dto.LoginRequest;
 import e2d.auth.dto.RegisterRequest;
-import e2d.auth.dto.UserInfoResponse;
-import e2d.auth.exception.UserNotFoundException;
-import e2d.auth.repository.UserRepository;
 import e2d.auth.service.AuthService;
 import e2d.auth.service.JwtService;
 import e2d.auth.service.RefreshTokenService;
@@ -27,7 +23,6 @@ public class AuthController {
     private final AuthService authService;
     private final RefreshTokenService refreshTokenService;
     private final JwtService jwtService;
-    private final UserRepository userRepository;
 
     @PostMapping("/register")
     public AuthResponse register(@RequestBody @Valid RegisterRequest registerRequest) {
@@ -51,12 +46,5 @@ public class AuthController {
     public ResponseEntity<?> logout(@AuthenticationPrincipal String username) {
         authService.logout(username);
         return ResponseEntity.ok().build();
-    }
-
-    @GetMapping("/users/{username}")
-    public ResponseEntity<UserInfoResponse> getUserByUsername(@PathVariable String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException(username));
-        return ResponseEntity.ok(new UserInfoResponse(user.getUsername(), user.getEmail()));
     }
 }

@@ -17,7 +17,7 @@ public class AuthServiceClient {
     private String authServiceUrl;
 
     public String getEmailByUsername(String username) {
-        String url = authServiceUrl + "/auth/users/" + username;
+        String url = authServiceUrl + "/internal/users/" + username;
         try {
             UserInfoResponse response = restTemplate.getForObject(url, UserInfoResponse.class);
             if (response != null && response.email() != null) {

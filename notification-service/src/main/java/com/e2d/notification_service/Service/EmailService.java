@@ -68,7 +68,7 @@ public class EmailService {
             log.info("Mail has been sent{}", message);
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            log.error("Failed to send email for ticket {}: {}", event.ticketId(), e.getMessage());
         }
     }
 }
