@@ -24,4 +24,9 @@ public class InternalController {
                 .orElseThrow(() -> new UserNotFoundException(username));
         return ResponseEntity.ok(new UserInfoResponse(user.getUsername(), user.getEmail()));
     }
+
+    @GetMapping("/users/email/{email}")
+    public Boolean CheckUserEmailExists(@PathVariable String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
 }

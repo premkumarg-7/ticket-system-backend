@@ -2,6 +2,7 @@ package e2d.ticketService.DTO;
 
 import e2d.ticketService.Entity.Enum.TicketPriority;
 import e2d.ticketService.Entity.Enum.TicketStatus;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -9,6 +10,8 @@ import lombok.*;
 
 import java.util.List;
 import java.util.UUID;
+
+import org.apache.kafka.common.protocol.types.Field.Str;
 
 @Getter
 @Setter
@@ -33,6 +36,9 @@ public class TicketDTO {
     private TicketPriority priority;
 
     private String assignedTo;
+
+    @Email(message = "Invalid Email Address")
+    private String assinedToEmail;
 
     @Size(max = 10, message = "Maximum 10 attachments allowed")
     private List<String> attachments;

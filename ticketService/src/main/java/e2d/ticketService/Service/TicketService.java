@@ -7,6 +7,7 @@ import e2d.ticketService.Entity.Enum.TicketStatus;
 import e2d.ticketService.Entity.Ticket;
 import e2d.ticketService.Client.AuthServiceClient;
 import e2d.ticketService.Exception.TicketNotFoundException;
+import e2d.ticketService.Exception.UserNotFoundException;
 import e2d.ticketService.Mapper.TicketMapper;
 import e2d.ticketService.Repository.TicketRepository;
 import lombok.*;
@@ -48,9 +49,8 @@ public class TicketService {
                 savedTicket.getTitle(),
                 creatorEmail,
                 savedTicket.getAssignedTo(),
-                null,  // assignedToEmail null for CREATED events
-                TicketEventType.TICKET_CREATED
-        );
+                null, // assignedToEmail null for CREATED events
+                TicketEventType.TICKET_CREATED);
 
         // SEND EVENT AFTER SAVE - only if save succeeds
         try {
@@ -87,39 +87,40 @@ public class TicketService {
     }
 
     @Transactional
-    public Ticket updateAssignedTo(UUID id, String assignedTo, String creatorEmail) {
+    public Ticket updateAssignedTo(UUID id, String assignedToEmail, String creatorEmail) {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new TicketNotFoundException(id));
 
         String oldAssignee = ticket.getAssignedTo();
 
-        if (oldAssignee != null && oldAssignee.equals(assignedTo)) {
+        if (oldAssignee != null && oldAssignee.equals(assignedToEmail)) {
             log.info("No change in assignee for ticket {}", id);
             return ticket;
         }
 
-        ticket.setAssignedTo(assignedTo);
-        Ticket updatedTicket = ticketRepository.save(ticket);
-
         // Lookup assignee email via auth service REST call
-        String assigneeEmail = null;
-        if (assignedTo != null) {
-            assigneeEmail = authServiceClient.getEmailByUsername(assignedTo);
+
+        if (assignedToEmail != null) {
+            if (!authServiceClient.checkUserEmailExist(assignedToEmail)) {
+                throw new UserNotFoundException("Assignee not Found  " + assignedToEmail);
+            }
         }
+
+        ticket.setAssignedTo(assignedToEmail);
+        Ticket updatedTicket = ticketRepository.save(ticket);
 
         TicketEvent event = new TicketEvent(
                 updatedTicket.getId(),
                 updatedTicket.getTitle(),
                 creatorEmail,
                 updatedTicket.getAssignedTo(),
-                assigneeEmail,
-                TicketEventType.TICKET_ASSIGNED
-        );
+                assignedToEmail,
+                TicketEventType.TICKET_ASSIGNED);
 
-        if (assignedTo != null) {
+        if (assignedToEmail != null) {
             try {
                 kafkaTemplate.send("e2d-notification", event);
-                log.info("Assignment event sent for ticket {} → {}", id, assignedTo);
+                log.info("Assignment event sent for ticket {} → {}", id, assignedToEmail);
             } catch (Exception e) {
                 log.error("Failed to send assignment event for ticket {}: {}", id, e.getMessage());
             }
