@@ -14,7 +14,9 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
 
       properties:
-        spring.json.trusted.packages: "*"
+        spring.json.value.default.type: com.e2d.notification_service.DTO.TicketEvent
+        spring.json.trusted.packages: "com.e2d.notification_service.DTO,e2d.ticketService.DTO"
+        spring.json.use.type.headers: false
 
     listener:
       missing-topics-fatal: false
@@ -22,8 +24,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: 1eventxtest@gmail.com
-    password: xxxxx
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true

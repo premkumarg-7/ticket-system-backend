@@ -9,5 +9,6 @@ public record TicketEvent(
         String ticketTitle,
         String userEmail,
         String assignedTo,
+        String assignedToEmail,
         TicketEventType eventType
 ) {}

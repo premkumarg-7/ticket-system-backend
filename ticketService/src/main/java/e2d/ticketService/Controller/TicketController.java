@@ -3,6 +3,7 @@ package e2d.ticketService.Controller;
 import e2d.ticketService.DTO.TicketDTO;
 import e2d.ticketService.Entity.Ticket;
 import e2d.ticketService.Service.TicketService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,8 +23,10 @@ public class TicketController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'AGENT')")
     @PostMapping
-    public ResponseEntity<Ticket> createTicket(@RequestBody TicketDTO ticketDTO) {
-        return ResponseEntity.ok(ticketService.createTicket(ticketDTO));
+    public ResponseEntity<Ticket> createTicket(
+            @RequestBody @Valid TicketDTO ticketDTO,
+            @RequestHeader("X-User-Email") String userEmail) {
+        return ResponseEntity.ok(ticketService.createTicket(ticketDTO, userEmail));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'USER')")
@@ -48,34 +51,24 @@ public class TicketController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'USER')")
     @PutMapping("/{id}")
-    public ResponseEntity<Ticket> updateTicket(@PathVariable UUID id, @RequestBody TicketDTO ticketDTO) {
-        try {
-            return ResponseEntity.ok(ticketService.updateTicket(id, ticketDTO));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Ticket> updateTicket(@PathVariable UUID id, @RequestBody @Valid TicketDTO ticketDTO) {
+        return ResponseEntity.ok(ticketService.updateTicket(id, ticketDTO));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'AGENT')")
     @PatchMapping("/{id}")
-    public ResponseEntity<Ticket> assignTicket(@PathVariable UUID id, @RequestBody TicketDTO ticketDTO) {
-        try {
-            String assigned_to = ticketDTO.getAssignedTo();
-            return ResponseEntity.ok(ticketService.updateAssignedTo(id, assigned_to));
-
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Ticket> assignTicket(
+            @PathVariable UUID id,
+            @RequestBody @Valid TicketDTO ticketDTO,
+            @RequestHeader("X-User-Email") String userEmail) {
+        String assigned_to = ticketDTO.getAssignedTo();
+        return ResponseEntity.ok(ticketService.updateAssignedTo(id, assigned_to, userEmail));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTicket(@PathVariable UUID id) {
-        try {
-            ticketService.deleteTicket(id);
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        ticketService.deleteTicket(id);
+        return ResponseEntity.ok().build();
     }
 }

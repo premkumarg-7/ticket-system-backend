@@ -5,6 +5,9 @@ import e2d.ticketService.DTO.TicketEvent;
 import e2d.ticketService.Entity.Enum.TicketEventType;
 import e2d.ticketService.Entity.Enum.TicketStatus;
 import e2d.ticketService.Entity.Ticket;
+import e2d.ticketService.Client.AuthServiceClient;
+import e2d.ticketService.Exception.TicketNotFoundException;
+import e2d.ticketService.Exception.UserNotFoundException;
 import e2d.ticketService.Mapper.TicketMapper;
 import e2d.ticketService.Repository.TicketRepository;
 import lombok.*;
@@ -27,26 +30,38 @@ public class TicketService {
 
     private final TicketRepository ticketRepository;
     private final TicketMapper ticketMapper;
+    private final AuthServiceClient authServiceClient;
 
     @Autowired
     private KafkaTemplate<String, TicketEvent> kafkaTemplate;
 
     @Transactional
-    public Ticket createTicket(TicketDTO ticketDTO) {
+    public Ticket createTicket(TicketDTO ticketDTO, String creatorEmail) {
         Ticket ticket = ticketMapper.toEntity(ticketDTO);
 
+        // SAVE FIRST - within transaction boundary
+        Ticket savedTicket = ticketRepository.save(ticket);
+        log.info("Ticket Created : {}", savedTicket);
 
+        // CREATE EVENT WITH PROPER EMAIL
         TicketEvent event = new TicketEvent(
-                ticket.getId(),
-                ticket.getTitle(),
-                ticket.createdBy,
-                ticket.getAssignedTo(),
-                TicketEventType.TICKET_CREATED
-        );
+                savedTicket.getId(),
+                savedTicket.getTitle(),
+                creatorEmail,
+                savedTicket.getAssignedTo(),
+                null, // assignedToEmail null for CREATED events
+                TicketEventType.TICKET_CREATED);
 
-        kafkaTemplate.send("e2d-notification", event);
-        log.info("Ticket Created : {}", ticket);
-        return ticketRepository.save(ticket);
+        // SEND EVENT AFTER SAVE - only if save succeeds
+        try {
+            kafkaTemplate.send("e2d-notification", event);
+            log.info("Notification event sent for ticket {}", savedTicket.getId());
+        } catch (Exception e) {
+            log.error("Failed to send Kafka event for ticket {}: {}", savedTicket.getId(), e.getMessage());
+            // Don't throw - ticket is already saved
+        }
+
+        return savedTicket;
     }
 
     public Page<Ticket> getAllTickets(Pageable pageable) {
@@ -64,7 +79,7 @@ public class TicketService {
     @Transactional
     public Ticket updateTicket(UUID id, TicketDTO ticketDTO) {
         Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
+                .orElseThrow(() -> new TicketNotFoundException(id));
 
         ticketMapper.updateEntityFromDto(ticketDTO, ticket);
 
@@ -72,40 +87,52 @@ public class TicketService {
     }
 
     @Transactional
-    public Ticket updateAssignedTo(UUID id, String assignedTo) {
-
+    public Ticket updateAssignedTo(UUID id, String assignedToEmail, String creatorEmail) {
         Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
+                .orElseThrow(() -> new TicketNotFoundException(id));
 
         String oldAssignee = ticket.getAssignedTo();
 
-        if (oldAssignee != null && oldAssignee.equals(assignedTo)) {
+        if (oldAssignee != null && oldAssignee.equals(assignedToEmail)) {
             log.info("No change in assignee for ticket {}", id);
             return ticket;
         }
 
-        ticket.setAssignedTo(assignedTo);
+        // Lookup assignee email via auth service REST call
+
+        if (assignedToEmail != null) {
+            if (!authServiceClient.checkUserEmailExist(assignedToEmail)) {
+                throw new UserNotFoundException("Assignee not Found  " + assignedToEmail);
+            }
+        }
+
+        ticket.setAssignedTo(assignedToEmail);
         Ticket updatedTicket = ticketRepository.save(ticket);
 
         TicketEvent event = new TicketEvent(
-                ticket.getId(),
-                ticket.getTitle(),
-                ticket.createdBy,
-                ticket.getAssignedTo(),
-                TicketEventType.TICKET_ASSIGNED
-        );
+                updatedTicket.getId(),
+                updatedTicket.getTitle(),
+                creatorEmail,
+                updatedTicket.getAssignedTo(),
+                assignedToEmail,
+                TicketEventType.TICKET_ASSIGNED);
 
-        if (assignedTo != null) {
-            kafkaTemplate.send("e2d-notification", event);
-            log.info("Assignment event sent for ticket {} → {}", id, assignedTo);
+        if (assignedToEmail != null) {
+            try {
+                kafkaTemplate.send("e2d-notification", event);
+                log.info("Assignment event sent for ticket {} → {}", id, assignedToEmail);
+            } catch (Exception e) {
+                log.error("Failed to send assignment event for ticket {}: {}", id, e.getMessage());
+            }
         }
+
         return updatedTicket;
     }
 
     @Transactional
     public void deleteTicket(UUID id) {
         if (!ticketRepository.existsById(id)) {
-            throw new RuntimeException("Ticket not found with id: " + id);
+            throw new TicketNotFoundException(id);
         }
         ticketRepository.deleteById(id);
     }

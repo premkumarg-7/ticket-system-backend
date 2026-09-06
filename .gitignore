@@ -1,0 +1,21 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Build
+target/
+build/
+*.class
+
+# Environment
+.env
+.env.local
+
+# Runtime
+logs/
+.pids/
+
+# OS
+.DS_Store
+Thumbs.db
