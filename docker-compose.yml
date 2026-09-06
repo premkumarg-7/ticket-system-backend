@@ -61,9 +61,9 @@ services:
       DB_SCHEMA: auth
       DB_USER: ${DB_USER:-ticket_user}
       DB_PASSWORD: ${DB_PASSWORD:-1234}
-      JWT_SECRET: ${JWT_SECRET:-e2d-helpdesk-service-2026-supersecret-key}
+      JWT_SECRET: ${JWT_SECRET}
       ADMIN_USER: ${ADMIN_USER:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     ports:
       - "8081:8081"
     networks: [ticket-net]
@@ -103,8 +103,8 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-dev}
       SERVER_PORT: 9000
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      MAIL_USERNAME: ${MAIL_USERNAME:-1eventxtest@gmail.com}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-ddgx twcr pdjy pkam}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
     ports:
       - "9000:9000"
     networks: [ticket-net]
@@ -123,7 +123,7 @@ services:
       AUTH_SERVICE_URL: http://auth:8081
       TICKET_SERVICE_URL: http://ticket:8088
       NOTIFICATION_SERVICE_URL: http://notification:9000
-      JWT_SECRET: ${JWT_SECRET:-e2d-helpdesk-service-2026-supersecret-key}
+      JWT_SECRET: ${JWT_SECRET}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
     ports:
       - "8001:8001"

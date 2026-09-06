@@ -84,4 +84,4 @@ springdoc:
         url: /v3/api-docs/notification
 
 jwt:
-  secret: ${JWT_SECRET:e2d-helpdesk-service-2026-supersecret-key}
+  secret: ${JWT_SECRET}

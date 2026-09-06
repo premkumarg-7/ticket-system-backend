@@ -27,7 +27,7 @@ app:
   bootstrap:
     admin:
       username: ${ADMIN_USER:admin}
-      password: ${ADMIN_PASSWORD:admin123}
+      password: ${ADMIN_PASSWORD}
 
 logging:
   level:
@@ -35,4 +35,4 @@ logging:
     org.hibernate.type.descriptor.sql: ${SQL_PARAM_LOG_LEVEL:TRACE}
 
 jwt:
-  secret: ${JWT_SECRET:e2d-helpdesk-service-2026-supersecret-key}
+  secret: ${JWT_SECRET}
