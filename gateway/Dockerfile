@@ -9,5 +9,5 @@ RUN sed -i 's/\r$//' gradlew && chmod +x gradlew \
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=build /workspace/app.jar /app/app.jar
-EXPOSE 8081
+EXPOSE 8001
 ENTRYPOINT ["java","-jar","/app/app.jar"]

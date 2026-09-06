@@ -25,6 +25,7 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/ticket/**").hasAnyRole("USER", "ADMIN", "AGENT")
                         .anyRequest().authenticated())
                 .addFilterBefore(gatewayHeaderFilter, UsernamePasswordAuthenticationFilter.class);

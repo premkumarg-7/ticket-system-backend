@@ -27,6 +27,9 @@ public class DataBootstrapRunner implements ApplicationRunner {
     @Value("${app.bootstrap.admin.username:admin}")
     private String adminUsername;
 
+    @Value("${app.bootstrap.admin.email:admin@test.com}")
+    private String adminemail;
+
     @Value("${app.bootstrap.admin.password:admin123}")
     private String adminPassword;
 
@@ -44,6 +47,7 @@ public class DataBootstrapRunner implements ApplicationRunner {
                 .orElseGet(() -> {
                     User admin = new User();
                     admin.setUsername(adminUsername);
+                    admin.setEmail(adminemail);
                     admin.setPassword(passwordEncoder.encode(adminPassword));
                     admin.setRoles(Set.of(roleAdmin));
                     return userRepository.save(admin);
